@@ -6,10 +6,12 @@ attrs==26.1.0
 certifi==2026.7.22
 charset-normalizer==3.5.1
 Django==6.1.1
+django-extensions==4.1
 frozenlist==1.8.0
 idna==3.19
 multidict==6.9.1
 propcache==0.5.4
+pygraphviz==2.0.2
 pyTelegramBotAPI==4.37.0
 python-dotenv==1.2.3
 requests==2.34.2
