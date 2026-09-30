@@ -49,7 +49,7 @@ def send_telegram_alert():
 
     url = (
         f"https://t.me/expiration_calculator_bot"
-        f"bot{8596050453:AAHPBG44A6XCM0WniYSzhKY0NXVfhR2ZejY}/sendMessage"
+        f"bot{}/sendMessage"
     )
 
 
