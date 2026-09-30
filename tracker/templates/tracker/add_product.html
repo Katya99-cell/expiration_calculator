@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5" style="max-width: 600px;">
+    <div class="card shadow border-0">
+        <div class="card-header bg-success text-white">
+            <h4 class="card-title mb-0">🧮 Интеллектуальный расчет срока хранения</h4>
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <!-- Общие ошибки формы (если есть) -->
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger shadow-sm">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Наименование -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Наименование товара</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                        <div class="text-danger small mt-1">{% for error in form.name.errors %}{{ error }}{% endfor %}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Категория -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Категория ГОСТ/ТУ</label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                        <div class="text-danger small mt-1">{% for error in form.category.errors %}{{ error }}{% endfor %}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Условия хранения -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Условия хранения среды</label>
+                    {{ form.storage_temperature }}
+                    <small class="text-muted">При комнатной температуре базовый срок уменьшается автоматически вдвое.</small>
+                    {% if form.storage_temperature.errors %}
+                        <div class="text-danger small mt-1">{% for error in form.storage_temperature.errors %}{{ error }}{% endfor %}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Дата производства -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Дата производства</label>
+                    {{ form.manufacture_date }}
+                    {% if form.manufacture_date.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.manufacture_date.errors %}⚠️ {{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Переключатель вскрытия упаковки -->
+                <div class="form-check form-switch mb-3 p-2 bg-light rounded ps-5">
+                    {{ form.is_opened }}
+                    <label class="form-check-label fw-bold" for="id_is_opened">Герметичная упаковка вскрыта</label>
+                </div>
+
+                <!-- Дата вскрытия -->
+                <div class="mb-3" id="opened_date_group" style="display: none;">
+                    <label class="form-label fw-bold text-warning">Дата вскрытия упаковки</label>
+                    {{ form.opened_date }}
+                    {% if form.opened_date.errors %}
+                        <div class="text-danger small mt-1">
+                            {% for error in form.opened_date.errors %}⚠️ {{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Рассчитать и зафиксировать</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Ждем полной загрузки DOM, чтобы гарантированно найти все элементы
+    document.addEventListener('DOMContentLoaded', function() {
+        const isOpenedCheckbox = document.getElementById('id_is_opened');
+        const openedDateGroup = document.getElementById('opened_date_group');
+        const openedDateInput = document.getElementById('id_opened_date');
+
+        function toggleOpenedDateField() {
+            if (isOpenedCheckbox.checked) {
+                openedDateGroup.style.display = 'block';
+                openedDateInput.removeAttribute('disabled');
+                
+                // Автоматически подставляем текущую дату, если поле пустое
+                if (!openedDateInput.value) {
+                    const today = new Date().toISOString().split('T')[0];
+                    openedDateInput.value = today;
+                }
+            } else {
+                openedDateGroup.style.display = 'none';
+                openedDateInput.setAttribute('disabled', 'disabled');
+                openedDateInput.value = '';
+            }
+        }
+
+        // Привязываем событие на изменение состояния чекбокса
+        isOpenedCheckbox.addEventListener('change', toggleOpenedDateField);
+        
+        // Первичный вызов для проверки состояния при загрузке (важно при возврате ошибок с сервера)
+        toggleOpenedDateField();
+    });
+</script>
+{% endblock %}
