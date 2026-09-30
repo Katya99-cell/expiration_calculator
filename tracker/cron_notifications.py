@@ -47,11 +47,7 @@ def send_telegram_alert():
     # Правильный URL Telegram Bot API
     # -----------------------------------------------------
 
-    url = (
-        f"https://t.me/expiration_calculator_bot"
-        f"bot{8596050453:AAHPBG44A6XCM0WniYSzhKY0NXVfhR2ZejY}/sendMessage"
-    )
-
+    url = f"https://telegram.org{BOT_TOKEN}/sendMessage"
 
     # -----------------------------------------------------
     # Получаем продукты вместе с пользователями и профилями
