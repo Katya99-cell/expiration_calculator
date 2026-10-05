@@ -134,6 +134,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# =========================================================
+# Auth redirects
+# =========================================================
+
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'products_list'
+LOGOUT_REDIRECT_URL = 'login'
 
 # =========================================================
 # Internationalization
