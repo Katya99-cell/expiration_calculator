@@ -1,12 +1,28 @@
-# Python (кэш компиляции)
-__pycache__/
-*.pyc
+# Секреты и настройки среды
+.env
+*.env
+auth.json
+secrets.json
 
-# База данных и локальные файлы разработчика
-db.sqlite3
-password.txt
+# Базы данных (для локальной разработки)
+*.sqlite3
+*.db
+
+# Кэш Python и скомпилированные файлы
+__pycache__/
+*.py[cod]
+*$py.class
 
 # Виртуальное окружение
 venv/
 .venv/
 env/
+ENV/
+
+# Настройки вашей среды разработки (VS Code / PyCharm)
+.vscode/
+.idea/
+
+# Медиа-файлы и статика (загрузки пользователей)
+media/
+staticfiles/
