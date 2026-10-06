@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
+
 from dotenv import load_dotenv
+
 
 # =========================================================
 # Основные настройки
@@ -39,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'tracker',
+    'django_extensions',
 ]
 
 
@@ -138,9 +141,15 @@ AUTH_PASSWORD_VALIDATORS = [
 # Auth redirects
 # =========================================================
 
+# Куда перенаправлять пользователя для входа в систему
 LOGIN_URL = 'login'
+
+# Куда перенаправлять пользователя после успешного входа
 LOGIN_REDIRECT_URL = 'products_list'
+
+# Куда перенаправлять после выхода из системы
 LOGOUT_REDIRECT_URL = 'login'
+
 
 # =========================================================
 # Internationalization
@@ -148,7 +157,8 @@ LOGOUT_REDIRECT_URL = 'login'
 
 LANGUAGE_CODE = 'ru-ru'
 
-TIME_ZONE = 'Asia/Tokyo'
+# Обратите внимание: у вас стоит Токио, если проект для РФ/Москвы, можно сменить на 'Europe/Moscow'
+TIME_ZONE = 'Asia/Tokyo' 
 
 USE_I18N = True
 
@@ -177,3 +187,4 @@ TELEGRAM_BOT_TOKEN = os.getenv(
     'TELEGRAM_BOT_TOKEN',
     ''
 ).strip()
+
