@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect
+from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.conf import settings
-
+from django.contrib.auth.forms import UserCreationForm
 import telebot
 
 from .models import Product, Profile
@@ -210,3 +212,113 @@ def add_product(request):
         'tracker/add_product.html',
         context
     )
+
+# =========================================================
+# Регистрация пользователя
+# =========================================================
+def register_view(request):
+    if request.user.is_authenticated:
+        return redirect('products_list')
+
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')  # Забираем чистый пароль из поля 'password'
+
+        # 1. Проверяем заполнение полей
+        if not username or not password:
+            return render(request, 'tracker/register.html', {
+                'error_message': 'Пожалуйста, заполните все поля.'
+            })
+
+        # 2. Проверяем, уникален ли логин
+        if User.objects.filter(username=username).exists():
+            return render(request, 'tracker/register.html', {
+                'error_message': 'Пользователь с таким логином уже существует.'
+            })
+
+        # 3. Создаем объект пользователя (но пока без сохранения в БД)
+        user = User(username=username)
+        
+        # 4. ВАЖНО: Хешируем пароль, чтобы Django мог его проверить при авторизации!
+        user.set_password(password)
+        
+        # 5. Сохраняем готового пользователя в базу данных
+        user.save()
+
+        # 6. Сразу автоматически входим в систему
+        login(request, user)
+
+        return redirect('products_list')
+
+    return render(request, 'tracker/register.html')
+            
+
+# =========================================================
+# Выход из системы
+# =========================================================
+
+def logout_view(request):
+    if request.method == 'POST':
+        logout(request)
+        messages.info(request, "Вы успешно вышли из системы.")
+        return redirect('login')
+    # Если кто-то зашел через GET-запрос, перенаправляем на продукты
+    return redirect('products_list')
+
+# =========================================================
+# Кастомная авторизация (Вход)
+# =========================================================
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('products_list')
+
+    error_message = None
+
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+
+        # Проверяем логин и пароль в базе данных
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            messages.success(request, f"Рады видеть вас снова, {user.username}!")
+            return redirect('products_list')
+        else:
+            error_message = "Неверное имя пользователя или пароль. Убедитесь, что раскладка клавиатуры и регистр верны."
+
+    return render(request, 'tracker/login.html', {'error_message': error_message})
+
+
+# =========================================================
+# Кастомная регистрация
+# =========================================================
+def register_view(request):
+    if request.user.is_authenticated:
+        return redirect('products_list')
+
+    error_message = None
+
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '')
+
+        if not username or not password:
+            error_message = "Пожалуйста, заполните все поля."
+        elif len(password) < 4:  # Базовая проверка длины
+            error_message = "Пароль должен содержать минимум 4 символа."
+        elif User.objects.filter(username=username).exists():
+            error_message = "Пользователь с таким логином уже существует."
+        else:
+            # Создаем и хешируем пароль
+            user = User(username=username)
+            user.set_password(password)
+            user.save()
+
+            # Сразу авторизуем
+            login(request, user)
+            messages.success(request, "Регистрация успешно завершена!")
+            return redirect('products_list')
+
+    return render(request, 'tracker/register.html', {'error_message': error_message})
