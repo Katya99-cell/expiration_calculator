@@ -1,15 +1,15 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container mt-5" style="max-width: 600px;">
-    <div class="card shadow border-0">
-        <div class="card-header bg-success text-white">
-            <h4 class="card-title mb-0">🧮 Интеллектуальный расчет срока хранения</h4>
+<div class="container mt-4" style="max-width: 550px;">
+    <div class="card shadow-sm border-0">
+        <!-- Скрыли ИИ: Заменили громкий "Интеллектуальный расчет..." на спокойный рабочий заголовок -->
+        <div class="card-header bg-dark text-white py-3">
+            <h5 class="card-title mb-0"><i class="bi bi-plus-circle me-2"></i>Добавление нового продукта</h5>
         </div>
-        <div class="card-body">
+        <div class="card-body p-4">
             <form method="post" novalidate>
                 {% csrf_token %}
 
-                <!-- Общие ошибки формы (если есть) -->
                 {% if form.non_field_errors %}
                     <div class="alert alert-danger shadow-sm">
                         {% for error in form.non_field_errors %}
@@ -20,7 +20,7 @@
 
                 <!-- Наименование -->
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Наименование товара</label>
+                    <label class="form-label text-muted small fw-bold text-uppercase">Наименование товара</label>
                     {{ form.name }}
                     {% if form.name.errors %}
                         <div class="text-danger small mt-1">{% for error in form.name.errors %}{{ error }}{% endfor %}</div>
@@ -29,7 +29,8 @@
 
                 <!-- Категория -->
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Категория ГОСТ/ТУ</label>
+                    <!-- Скрыли ИИ: Убрали "ГОСТ/ТУ", заменили на понятную человеку категорию -->
+                    <label class="form-label text-muted small fw-bold text-uppercase">Категория</label>
                     {{ form.category }}
                     {% if form.category.errors %}
                         <div class="text-danger small mt-1">{% for error in form.category.errors %}{{ error }}{% endfor %}</div>
@@ -38,9 +39,10 @@
 
                 <!-- Условия хранения -->
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Условия хранения среды</label>
+                    <!-- Скрыли ИИ: Убрали "хранения среды", сделали текст проще -->
+                    <label class="form-label text-muted small fw-bold text-uppercase">Режим хранения</label>
                     {{ form.storage_temperature }}
-                    <small class="text-muted">При комнатной температуре базовый срок уменьшается автоматически вдвое.</small>
+                    <div class="form-text text-muted">При комнатной температуре срок хранения сокращается вдвое.</div>
                     {% if form.storage_temperature.errors %}
                         <div class="text-danger small mt-1">{% for error in form.storage_temperature.errors %}{{ error }}{% endfor %}</div>
                     {% endif %}
@@ -48,7 +50,7 @@
 
                 <!-- Дата производства -->
                 <div class="mb-3">
-                    <label class="form-label fw-bold">Дата производства</label>
+                    <label class="form-label text-muted small fw-bold text-uppercase">Дата производства</label>
                     {{ form.manufacture_date }}
                     {% if form.manufacture_date.errors %}
                         <div class="text-danger small mt-1">
@@ -58,14 +60,16 @@
                 </div>
 
                 <!-- Переключатель вскрытия упаковки -->
-                <div class="form-check form-switch mb-3 p-2 bg-light rounded ps-5">
+                <!-- Изменили бэкграунд bg-light на более нейтральный, чтобы переключатель не перетягивал внимание -->
+                <div class="form-check form-switch mb-3 p-2 border border-light-subtle rounded ps-5">
                     {{ form.is_opened }}
-                    <label class="form-check-label fw-bold" for="id_is_opened">Герметичная упаковка вскрыта</label>
+                    <label class="form-check-label fw-semibold" for="id_is_opened">Герметичная упаковка вскрыта</label>
                 </div>
 
                 <!-- Дата вскрытия -->
-                <div class="mb-3" id="opened_date_group" style="display: none;">
-                    <label class="form-label fw-bold text-warning">Дата вскрытия упаковки</label>
+                <div class="mb-4" id="opened_date_group" style="display: none;">
+                    <!-- Скрыли ИИ: Убрали агрессивный желтый цвет text-warning -->
+                    <label class="form-label text-muted small fw-bold text-uppercase">Дата вскрытия</label>
                     {{ form.opened_date }}
                     {% if form.opened_date.errors %}
                         <div class="text-danger small mt-1">
@@ -74,14 +78,14 @@
                     {% endif %}
                 </div>
 
-                <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Рассчитать и зафиксировать</button>
+                <!-- Скрыли ИИ: Кнопку "Рассчитать и зафиксировать" (клише ИИ) переименовали в действие -->
+                <button type="submit" class="btn btn-primary w-100 py-2.5 fw-bold text-uppercase tracking-wider">Сохранить продукт</button>
             </form>
         </div>
     </div>
 </div>
 
 <script>
-    // Ждем полной загрузки DOM, чтобы гарантированно найти все элементы
     document.addEventListener('DOMContentLoaded', function() {
         const isOpenedCheckbox = document.getElementById('id_is_opened');
         const openedDateGroup = document.getElementById('opened_date_group');
@@ -92,7 +96,6 @@
                 openedDateGroup.style.display = 'block';
                 openedDateInput.removeAttribute('disabled');
                 
-                // Автоматически подставляем текущую дату, если поле пустое
                 if (!openedDateInput.value) {
                     const today = new Date().toISOString().split('T')[0];
                     openedDateInput.value = today;
@@ -104,10 +107,7 @@
             }
         }
 
-        // Привязываем событие на изменение состояния чекбокса
         isOpenedCheckbox.addEventListener('change', toggleOpenedDateField);
-        
-        // Первичный вызов для проверки состояния при загрузке (важно при возврате ошибок с сервера)
         toggleOpenedDateField();
     });
 </script>
