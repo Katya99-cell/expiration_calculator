@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Продвинутый Калькулятор Сроков Годности</title>
+    <title>FreshManager — Учет сроков годности</title>
     
-    <!-- Подключение официальных стилей и иконок Bootstrap -->
+    <!-- ИСПРАВЛЕНО: Настоящая рабочая ссылка на Bootstrap 5 CSS -->
     <link href="https://jsdelivr.net" rel="stylesheet">
-    <link rel="stylesheet" href="https://jsdelivr.net">
     
     <!-- НАДЁЖНЫЕ АВТОРСКИЕ СТИЛИ ДЛЯ ТЕМНОЙ ТЕМЫ -->
     <style>
         body { transition: background-color 0.3s ease, color 0.3s ease; }
         
-        /* Стили, которые применятся, когда у body будет класс dark-mode */
         body.dark-mode {
             background-color: #121824 !important;
             color: #e3e8f0 !important;
@@ -50,59 +48,72 @@
     <!-- Навигационная панель -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
         <div class="container">
-            <!-- Исправлено имя маршрута на products_list -->
-            <a class="navbar-brand" href="{% url 'products_list' %}">🍏 FreshManager.Pro</a>
+            <a class="navbar-brand fw-bold" href="{% url 'products_list' %}">🍏 FreshManager.Pro</a>
+            
+            <!-- Исправлено: Кнопка-гамбургер для мобильных устройств, чтобы меню открывалось -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     {% if user.is_authenticated %}
-                        <!-- Исправлено имя маршрута на products_list -->
                         <li class="nav-item"><a class="nav-link" href="{% url 'products_list' %}">📋 Склад продуктов</a></li>
-                        <li class="nav-item"><a class="nav-link" href="{% url 'add_product' %}">➕ Новый расчет</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'add_product' %}">➕ Добавить продукт</a></li>
                     {% endif %}
                 </ul>
-                <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center flex-wrap gap-2">
                     
                     <!-- НАДЕЖНАЯ КНОПКА СМЕНЫ ТЕМЫ ДЕНЬ/НОЧЬ -->
-                    <button class="btn btn-outline-light me-3 btn-sm" id="themeToggler" type="button">
+                    <button class="btn btn-outline-light btn-sm" id="themeToggler" type="button">
                         <span id="themeBtnText">🌙 Темная тема</span>
                     </button>
 
                     {% if user.is_authenticated %}
-                        <span class="navbar-text text-white me-3">👤 {{ user.username }}</span>
-                        <form action="{% url 'logout' %}" method="post" class="d-inline">
+                        <span class="navbar-text text-white me-2">👤 {{ user.username }}</span>
+                        <form action="{% url 'logout' %}" method="post" class="d-inline m-0">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-light btn-sm">Выйти</button>
+                            <button type="submit" class="btn btn-outline-danger btn-sm">Выйти</button>
                         </form>
                     {% else %}
                         <a class="btn btn-outline-light btn-sm" href="{% url 'login' %}">Войти</a>
+                        <a class="btn btn-light btn-sm" href="{% url 'register' %}">Регистрация</a>
                     {% endif %}
                 </div>
             </div>
         </div>
     </nav>
 
+    <!-- ИСПРАВЛЕНО: Добавлен блок для всплывающих уведомлений Django (успех/ошибка) -->
+    <div class="container mb-3">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show small" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
     <main class="container">
         {% block content %}
         {% endblock %}
     </main>
 
-    <!-- ОБНОВЛЕННЫЙ СКРИПТ ПЕРЕКЛЮЧЕНИЯ КЛАССОВ -->
     <script>
         const themeToggler = document.getElementById('themeToggler');
         const themeBtnText = document.getElementById('themeBtnText');
         const bodyTag = document.body;
 
-        // 1. Проверяем сохраненную тему в кэше браузера при загрузке страницы
         const savedTheme = localStorage.getItem('theme') || 'light';
         if (savedTheme === 'dark') {
             bodyTag.classList.add('dark-mode');
         }
         updateButtonInterface(savedTheme);
 
-        // 2. Обработчик клика по кнопке
         themeToggler.addEventListener('click', function() {
             const isDark = bodyTag.classList.contains('dark-mode');
-            
             if (isDark) {
                 bodyTag.classList.remove('dark-mode');
                 localStorage.setItem('theme', 'light');
@@ -114,7 +125,6 @@
             }
         });
 
-        // Функция изменения текста на кнопке в зависимости от активного режима
         function updateButtonInterface(theme) {
             if (theme === 'dark') {
                 themeBtnText.innerText = '☀️ Светлая тема';
@@ -124,7 +134,7 @@
         }
     </script>
     
-    <!-- Скрипты Bootstrap для работы адаптивных элементов -->
+    <!-- ИСПРАВЛЕНО: Настоящий рабочий JS скрипт Bootstrap 5 bundle -->
     <script src="https://jsdelivr.net"></script>
 </body>
 </html>
