@@ -41,7 +41,7 @@ class ProductForm(forms.ModelForm):
 
         # 2. Проверка логики вскрытия упаковки
         if is_opened:
-            # АВТОМАТИЗАЦИЯ ДЛЯ ВКР: если галочка стоит, а дата пустая — подставляем сегодня автоматически
+            # АВТОМАТИЗАЦИЯ: если галочка стоит, а дата пустая — подставляем сегодня автоматически
             if not opened_date:
                 opened_date = today
                 cleaned_data['opened_date'] = today
