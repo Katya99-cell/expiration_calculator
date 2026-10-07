@@ -10,15 +10,25 @@ class ProductForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Например: Йогурт клубничный'}),
             'category': forms.Select(attrs={'class': 'form-select'}),
-            'manufacture_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            # Поле даты производства теперь по умолчанию будет иметь текущую дату в календаре
+            'manufacture_date': forms.DateInput(attrs={
+                'class': 'form-control', 
+                'type': 'date',
+                'value': timezone.localdate
+            }),
             'storage_temperature': forms.Select(attrs={'class': 'form-select'}),
             'is_opened': forms.CheckboxInput(attrs={'class': 'form-check-input', 'id': 'id_is_opened'}),
-            # Изначально блокируем поле даты вскрытия через disabled
-            'opened_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'id': 'id_opened_date', 'disabled': 'disabled'}),
+            # Используем readonly вместо disabled, чтобы браузер отправлял данные на сервер
+            'opened_date': forms.DateInput(attrs={
+                'class': 'form-control', 
+                'type': 'date', 
+                'id': 'id_opened_date', 
+                'readonly': 'readonly'
+            }),
         }
 
     def clean(self):
-        """Продвинутая комплексная валидация бизнес-логики дат для ВКР"""
+        """Продвинутая комплексная валидация бизнес-логики дат"""
         cleaned_data = super().clean()
         manufacture_date = cleaned_data.get('manufacture_date')
         is_opened = cleaned_data.get('is_opened')
@@ -31,11 +41,18 @@ class ProductForm(forms.ModelForm):
 
         # 2. Проверка логики вскрытия упаковки
         if is_opened:
+            # АВТОМАТИЗАЦИЯ ДЛЯ ВКР: если галочка стоит, а дата пустая — подставляем сегодня автоматически
             if not opened_date:
-                self.add_error('opened_date', "Укажите дату вскрытия упаковки!")
-            elif manufacture_date and opened_date < manufacture_date:
+                opened_date = today
+                cleaned_data['opened_date'] = today
+            
+            # Проверки корректности дат
+            if manufacture_date and opened_date < manufacture_date:
                 self.add_error('opened_date', "Упаковка не могла быть вскрыта раньше, чем произведен продукт!")
             elif opened_date > today:
                 self.add_error('opened_date', "Дата вскрытия не может быть в будущем!")
+        else:
+            # Если галочку сняли, то дату вскрытия нужно очистить
+            cleaned_data['opened_date'] = None
         
         return cleaned_data
