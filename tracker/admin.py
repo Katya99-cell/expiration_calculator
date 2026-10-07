@@ -11,7 +11,7 @@ class ProductAdmin(admin.ModelAdmin):
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'default_shelf_life_days')
 
-# ОБЯЗАТЕЛЬНО ДЛЯ ДИПЛОМА: вывод профилей в админку
+# ОБЯЗАТЕЛЬНО: вывод профилей в админку
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'telegram_chat_id')
