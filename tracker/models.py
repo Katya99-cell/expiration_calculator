@@ -44,11 +44,23 @@ class Product(models.Model):
     def clean(self):
         """Валидация логики дат перед сохранением"""
         super().clean()
+        today = timezone.localdate()
+
+        # 1. Защита от дат производства из будущего
+        if self.manufacture_date and self.manufacture_date > today:
+            raise ValidationError({
+                'manufacture_date': f"Дата производства ({self.manufacture_date}) не может быть в будущем! Сегодня: {today}"
+            })
+
+        # 2. Проверка даты вскрытия
         if self.opened_date:
             if self.opened_date < self.manufacture_date:
-                raise ValidationError({'opened_date': "Дата вскрытия не может быть раньше даты производства."})
-            if self.opened_date > timezone.localdate():
-                raise ValidationError({'opened_date': "Дата вскрытия не может быть в будущем."})
+                raise ValidationError({
+                    'opened_date': "Дата вскрытия не может быть раньше даты производства."
+                })
+            if self.opened_date > today:
+                raise ValidationError({
+                    'opened_date': "Дата вскрытия не может быть в будущем." })
 
     def save(self, *args, **kwargs):
         """Многофакторный алгоритм калькуляции сроков хранения"""
