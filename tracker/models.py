@@ -42,29 +42,31 @@ class Product(models.Model):
     opened_date = models.DateField(blank=True, null=True, verbose_name="Дата вскрытия упаковки")
 
     def clean(self):
-        """Валидация логики дат перед сохранением"""
+        """Полная валидация бизнес-логики дат перед сохранением"""
         super().clean()
         today = timezone.localdate()
 
         # 1. Защита от дат производства из будущего
         if self.manufacture_date and self.manufacture_date > today:
             raise ValidationError({
-                'manufacture_date': f"Дата производства ({self.manufacture_date}) не может быть в будущем! Сегодня: {today}"
+                'manufacture_date': f"Критическая ошибка: дата производства не может быть в будущем! (Введено: {self.manufacture_date}, Сегодня: {today})"
             })
 
-        # 2. Проверка даты вскрытия
+        # 2. Проверка даты вскрытия упаковки
         if self.opened_date:
             if self.opened_date < self.manufacture_date:
                 raise ValidationError({
-                    'opened_date': "Дата вскрытия не может быть раньше даты производства."
+                    'opened_date': f"Дата вскрытия ({self.opened_date}) не может быть раньше даты производства ({self.manufacture_date})."
                 })
             if self.opened_date > today:
                 raise ValidationError({
-                    'opened_date': "Дата вскрытия не может быть в будущем." })
+                    'opened_date': "Дата вскрытия не может быть в будущем."
+                })
 
     def save(self, *args, **kwargs):
-        """Многофакторный алгоритм калькуляции сроков хранения"""
-        self.full_clean() # Принудительный запуск clean() перед сохранением
+        """Многофакторный алгоритм калькуляции с учетом температуры и вскрытия"""
+        # Принудительно вызываем clean() перед записью в БД для отлова дат из будущего
+        self.full_clean() 
         
         if self.category:
             days = self.category.default_shelf_life_days
@@ -73,18 +75,17 @@ class Product(models.Model):
             if self.storage_temperature == 'ROOM':
                 days = max(1, int(days / 2))
             
-            # Базовый расчет от даты производства
+            # Базовый срок (для закрытого товара в выбранных температурных условиях)
             base_expiration = self.manufacture_date + datetime.timedelta(days=days)
             
-            # Влияние фактора вскрытия (годен 3 дня после вскрытия, но не дольше базового срока)
+            # Влияние вскрытия: годен 3 дня, но не дольше, чем базовый срок
             if self.is_opened and self.opened_date:
                 opened_expiration = self.opened_date + datetime.timedelta(days=3)
-                # Продукт не может стать "более свежим" после вскрытия, берем минимальную дату
                 self.expiration_date = min(base_expiration, opened_expiration)
             else:
                 self.expiration_date = base_expiration
         else:
-            # Если категория удалена или не задана, а дата не установлена вручную
+            # Если категория не указана, не ломаем логику (например, ставим 1 день по умолчанию)
             if not self.expiration_date:
                 self.expiration_date = self.manufacture_date + datetime.timedelta(days=1)
                 
