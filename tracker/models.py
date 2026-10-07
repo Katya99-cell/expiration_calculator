@@ -2,11 +2,12 @@ import datetime
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 class Category(models.Model):
     """Категории товаров со стандартными сроками годности (ГОСТ/ТУ)"""
     name = models.CharField(max_length=100, verbose_name="Название категории")
-    default_shelf_life_days = models.IntegerField(verbose_name="Срок хранения по умолчанию (дней)")
+    default_shelf_life_days = models.PositiveIntegerField(verbose_name="Срок хранения по умолчанию (дней)")
 
     def __str__(self):
         return self.name
@@ -23,12 +24,12 @@ class Product(models.Model):
         ('ROOM', 'Комнатная температура (+18...+22°C)'),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="Пользователь")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='products', verbose_name="Пользователь")
     name = models.CharField(max_length=150, verbose_name="Наименование товара")
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, verbose_name="Категория")
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Категория")
     
     manufacture_date = models.DateField(verbose_name="Дата производства")
-    expiration_date = models.DateField(blank=True, null=True, verbose_name="Дата окончания срока (расчетная)")
+    expiration_date = models.DateField(blank=True, null=True, db_index=True, verbose_name="Дата окончания срока (расчетная)")
     
     storage_temperature = models.CharField(
         max_length=20, 
@@ -40,8 +41,19 @@ class Product(models.Model):
     is_opened = models.BooleanField(default=False, verbose_name="Упаковка вскрыта")
     opened_date = models.DateField(blank=True, null=True, verbose_name="Дата вскрытия упаковки")
 
+    def clean(self):
+        """Валидация логики дат перед сохранением"""
+        super().clean()
+        if self.opened_date:
+            if self.opened_date < self.manufacture_date:
+                raise ValidationError({'opened_date': "Дата вскрытия не может быть раньше даты производства."})
+            if self.opened_date > timezone.localdate():
+                raise ValidationError({'opened_date': "Дата вскрытия не может быть в будущем."})
+
     def save(self, *args, **kwargs):
-        """Многофакторный алгоритм калькуляции сроков хранения для ВКР"""
+        """Многофакторный алгоритм калькуляции сроков хранения"""
+        self.full_clean() # Принудительный запуск clean() перед сохранением
+        
         if self.category:
             days = self.category.default_shelf_life_days
             
@@ -49,11 +61,20 @@ class Product(models.Model):
             if self.storage_temperature == 'ROOM':
                 days = max(1, int(days / 2))
             
-            # Влияние фактора вскрытия герметичности (по бизнес-логике: годен 3 дня после вскрытия)
+            # Базовый расчет от даты производства
+            base_expiration = self.manufacture_date + datetime.timedelta(days=days)
+            
+            # Влияние фактора вскрытия (годен 3 дня после вскрытия, но не дольше базового срока)
             if self.is_opened and self.opened_date:
-                self.expiration_date = self.opened_date + datetime.timedelta(days=3)
+                opened_expiration = self.opened_date + datetime.timedelta(days=3)
+                # Продукт не может стать "более свежим" после вскрытия, берем минимальную дату
+                self.expiration_date = min(base_expiration, opened_expiration)
             else:
-                self.expiration_date = self.manufacture_date + datetime.timedelta(days=days)
+                self.expiration_date = base_expiration
+        else:
+            # Если категория удалена или не задана, а дата не установлена вручную
+            if not self.expiration_date:
+                self.expiration_date = self.manufacture_date + datetime.timedelta(days=1)
                 
         super().save(*args, **kwargs)
 
@@ -67,14 +88,14 @@ class Product(models.Model):
 
     @property
     def total_days(self):
-        """Общий срок хранения данного товара в днях от производства до дедлайна"""
+        """Общий срок хранения данного товара в днях от производства"""
         if self.expiration_date and self.manufacture_date:
             return max(1, (self.expiration_date - self.manufacture_date).days)
         return 1
 
     @property
     def freshness_percentage(self):
-        """Математически гарантированный расчет остаточного ресурса продукта в % для ВКР"""
+        """Математически гарантированный расчет остаточного ресурса продукта в % """
         today = timezone.localdate()
         manufacture = self.manufacture_date
         expiration = self.expiration_date
@@ -83,27 +104,23 @@ class Product(models.Model):
             return 100
             
         total_duration = (expiration - manufacture).days
-        
         if total_duration <= 0:
             return 0
             
-        # Если продукт уже просрочен
         if today > expiration:
             return 0
             
-        # Если продукт еще не произведен (ситуация из будущего)
         if today < manufacture:
             return 100
             
         days_left = (expiration - today).days
         percent_left = int((days_left / total_duration) * 100)
         
-        # Гарантируем рамки от 0 до 100
         return max(0, min(100, percent_left))
 
     @property
     def status(self):
-        """Индикатор свежести для UI (согласовано со скриптом cron_notifications.py)"""
+        """Индикатор свежести для UI и cron-скриптов"""
         left = self.days_left
         if left < 0:
             return "expired"
@@ -117,12 +134,15 @@ class Product(models.Model):
     class Meta:
         verbose_name = "Товар"
         verbose_name_plural = "Товары"
+        # Сортировка по умолчанию: сначала просрочка и то, что скоро испортится
+        ordering = ['expiration_date'] 
 
 
 class Profile(models.Model):
     """Профиль пользователя для интеграции с Telegram-ботом оповещений"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    telegram_chat_id = models.CharField(max_length=50, blank=True, null=True, verbose_name="Telegram Chat ID")
+    # db_index добавлен для быстрого поиска пользователя при обработке вебхуков Telegram
+    telegram_chat_id = models.CharField(max_length=50, blank=True, null=True, db_index=True, verbose_name="Telegram Chat ID")
 
     def __str__(self):
         return f"Профиль {self.user.username}"
