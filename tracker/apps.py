@@ -2,7 +2,7 @@ from django.apps import AppConfig
 from django.db.models.signals import post_migrate
 
 def create_default_categories(sender, **kwargs):
-    """Автоматическое наполнение базы данных категориями ГОСТ/ТУ для ВКР"""
+    """Автоматическое наполнение базы данных категориями ГОСТ/ТУ"""
     # Ленивый импорт модели внутри функции обязателен, чтобы избежать AppRegistryNotReady
     from tracker.models import Category
     
