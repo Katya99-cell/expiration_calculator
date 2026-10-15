@@ -1,51 +1,309 @@
+html
 {% extends 'base.html' %}
+
 {% block content %}
-<div class="container mt-5" style="max-width: 400px;">
-    <div class="card shadow">
-        <div class="card-header bg-dark text-white text-center">
-            <h4> Авторизация в системе</h4>
+
+<style>
+    .login-page {
+        max-width: 440px;
+        margin: 25px auto 50px;
+    }
+
+    .login-card {
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+
+    .login-header {
+        padding: 30px 30px 24px;
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .login-logo {
+        display: grid;
+        place-items: center;
+        width: 58px;
+        height: 58px;
+        margin: 0 auto 17px;
+        border-radius: 18px;
+        background: #e5f6eb;
+        font-size: 29px;
+    }
+
+    .login-title {
+        color: var(--text);
+        font-size: 25px;
+        font-weight: 800;
+        letter-spacing: -.7px;
+        margin-bottom: 8px;
+    }
+
+    .login-subtitle {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .login-body {
+        padding: 28px 30px 30px;
+    }
+
+    .login-label {
+        display: block;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .login-input {
+        min-height: 47px;
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 11px !important;
+        font-size: 14px;
+    }
+
+    .login-input::placeholder {
+        color: var(--muted);
+        opacity: .8;
+    }
+
+    .login-input:focus {
+        background: var(--surface);
+        color: var(--text);
+        border-color: #218653;
+        box-shadow: 0 0 0 3px rgba(33, 134, 83, .12);
+    }
+
+    .login-password-group .login-input {
+        border-radius: 11px 0 0 11px !important;
+    }
+
+    .login-toggle {
+        min-width: 48px;
+        border: 1px solid var(--border);
+        border-left: 0;
+        border-radius: 0 11px 11px 0 !important;
+        background: var(--bg);
+        color: var(--text);
+    }
+
+    .login-toggle:hover {
+        background: var(--border);
+        color: var(--text);
+    }
+
+    .login-submit {
+        width: 100%;
+        min-height: 48px;
+        background: #218653;
+        border: 1px solid #218653;
+        border-radius: 11px;
+        color: white;
+        font-weight: 750;
+        transition: background .2s, transform .2s;
+    }
+
+    .login-submit:hover {
+        background: #176b41;
+        border-color: #176b41;
+        color: white;
+    }
+
+    .login-submit:active {
+        transform: scale(.99);
+    }
+
+    .login-footer {
+        padding-top: 21px;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    .login-footer a {
+        color: var(--green);
+        font-weight: 750;
+        text-decoration: none;
+    }
+
+    .login-footer a:hover {
+        text-decoration: underline;
+    }
+
+    .login-security {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 7px;
+        margin-top: 20px;
+        color: var(--muted);
+        font-size: 11px;
+    }
+
+    body.dark-mode .login-logo {
+        background: #203e2b;
+    }
+
+    @media (max-width: 480px) {
+        .login-page {
+            margin: 5px auto 30px;
+        }
+
+        .login-header {
+            padding: 25px 20px 20px;
+        }
+
+        .login-body {
+            padding: 24px 20px;
+        }
+    }
+</style>
+
+<div class="login-page">
+
+    <div class="login-card">
+
+        <div class="login-header">
+            <div class="login-logo">🍏</div>
+
+            <h1 class="login-title">С возвращением!</h1>
+
+            <p class="login-subtitle">
+                Войдите в FreshManager.Pro,
+                чтобы управлять своим складом.
+            </p>
         </div>
-        <div class="card-body">
-                    <div class="card-body">
-            <!-- Блок вывода ошибок бэкенда -->
+
+        <div class="login-body">
+
+            <!-- Ошибки авторизации -->
             {% if error_message %}
-                <div class="alert alert-danger small mb-3">{{ error_message }}</div>
+            <div class="alert alert-danger small" role="alert">
+                {{ error_message }}
+            </div>
             {% endif %}
+
             {% if messages %}
                 {% for message in messages %}
-                    {% if message.tags == 'error' or message.tags == 'danger' %}
-                        <div class="alert alert-danger small mb-3">{{ message }}</div>
+                    {% if 'error' in message.tags or 'danger' in message.tags %}
+                    <div class="alert alert-danger small" role="alert">
+                        {{ message }}
+                    </div>
                     {% endif %}
                 {% endfor %}
             {% endif %}
 
-            <form method="post" action="{% url 'login' %}">
-
-            <form method="post">
-                {% csrf_token %}
-                {% if form.errors %}
-                    <div class="alert alert-danger">Неверное имя пользователя или пароль.</div>
-                {% endif %}
-                
-                <div class="mb-3">
-                    <label class="form-label">Логин</label>
-                    <input type="text" name="username" class="form-control" required>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">Пароль</label>
-                    <input type="password" name="password" class="form-control" required>
-                </div>
-                
-                <button type="submit" class="btn btn-dark w-100 mb-3">Войти</button>
-            </form>
-            
-            <!-- Ссылка на регистрацию -->
-            <div class="text-center small">
-                Нет аккаунта? <a href="{% url 'register' %}" class="text-dark fw-bold text-decoration-none">Зарегистрироваться</a>
+            {% if form.errors %}
+            <div class="alert alert-danger small" role="alert">
+                Неверное имя пользователя или пароль.
+                Проверьте данные и попробуйте ещё раз.
             </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'login' %}">
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <label for="username" class="login-label">
+                        Логин
+                    </label>
+
+                    <input
+                        type="text"
+                        name="username"
+                        id="username"
+                        class="form-control login-input"
+                        placeholder="Введите ваш логин"
+                        autocomplete="username"
+                        required>
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" class="login-label">
+                        Пароль
+                    </label>
+
+                    <div class="input-group login-password-group">
+                        <input
+                            type="password"
+                            name="password"
+                            id="password"
+                            class="form-control login-input"
+                            placeholder="Введите пароль"
+                            autocomplete="current-password"
+                            required>
+
+                        <button
+                            type="button"
+                            class="btn login-toggle"
+                            id="toggleLoginPassword"
+                            aria-label="Показать пароль"
+                            aria-pressed="false">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn login-submit mb-4">
+                    Войти в аккаунт
+                    <i class="bi bi-arrow-right ms-2"></i>
+                </button>
+            </form>
+
+            <div class="login-footer">
+                Нет аккаунта?
+                <a href="{% url 'register' %}">
+                    Зарегистрироваться
+                </a>
+            </div>
+
+            <div class="login-security">
+                <i class="bi bi-shield-lock"></i>
+                Безопасный вход в систему
+            </div>
+
         </div>
     </div>
-</div>
-{% endblock %}
 
+</div>
+
+<script>
+(function () {
+    const passwordInput = document.getElementById('password');
+    const toggleButton = document.getElementById('toggleLoginPassword');
+
+    if (!passwordInput || !toggleButton) return;
+
+    toggleButton.addEventListener('click', function () {
+        const showPassword = passwordInput.type === 'password';
+
+        passwordInput.type = showPassword ? 'text' : 'password';
+
+        toggleButton.setAttribute(
+            'aria-pressed',
+            String(showPassword)
+        );
+
+        toggleButton.setAttribute(
+            'aria-label',
+            showPassword ? 'Скрыть пароль' : 'Показать пароль'
+        );
+
+        toggleButton.innerHTML = showPassword
+            ? '<i class="bi bi-eye-slash" aria-hidden="true"></i>'
+            : '<i class="bi bi-eye" aria-hidden="true"></i>';
+    });
+})();
+</script>
+
+{% endblock %}

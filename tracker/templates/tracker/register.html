@@ -1,100 +1,455 @@
+html
 {% extends 'base.html' %}
+
 {% block content %}
-<div class="container mt-5" style="max-width: 400px;">
-    <div class="card shadow">
-        <div class="card-header bg-dark text-white text-center">
-            <h4>Регистрация в системе</h4>
+
+<style>
+    .auth-page {
+        max-width: 440px;
+        margin: 25px auto 50px;
+    }
+
+    .auth-card {
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+    }
+
+    .auth-header {
+        padding: 30px 30px 24px;
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .auth-logo {
+        display: grid;
+        place-items: center;
+        width: 58px;
+        height: 58px;
+        margin: 0 auto 17px;
+        border-radius: 18px;
+        background: #e5f6eb;
+        font-size: 29px;
+    }
+
+    .auth-title {
+        color: var(--text);
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: -.6px;
+        margin-bottom: 8px;
+    }
+
+    .auth-subtitle {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .auth-body {
+        padding: 28px 30px 30px;
+    }
+
+    .auth-label {
+        display: block;
+        color: var(--text);
+        font-weight: 700;
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+
+    .auth-input {
+        min-height: 47px;
+        border: 1px solid var(--border);
+        border-radius: 11px !important;
+        background: var(--surface);
+        color: var(--text);
+        font-size: 14px;
+    }
+
+    .auth-input::placeholder {
+        color: var(--muted);
+        opacity: .8;
+    }
+
+    .auth-input:focus {
+        background: var(--surface);
+        color: var(--text);
+        border-color: #218653;
+        box-shadow: 0 0 0 3px rgba(33, 134, 83, .12);
+    }
+
+    .auth-input-group .auth-input {
+        border-radius: 11px 0 0 11px !important;
+    }
+
+    .password-toggle {
+        min-width: 48px;
+        border: 1px solid var(--border);
+        border-left: 0;
+        border-radius: 0 11px 11px 0 !important;
+        background: var(--bg);
+        color: var(--text);
+    }
+
+    .password-toggle:hover {
+        background: var(--border);
+        color: var(--text);
+    }
+
+    .password-generator {
+        width: 100%;
+        min-height: 43px;
+        border: 1px dashed #9ac9a9;
+        border-radius: 10px;
+        background: color-mix(in srgb, #218653 6%, var(--surface));
+        color: var(--green);
+        font-weight: 700;
+        font-size: 12px;
+    }
+
+    .password-generator:hover {
+        border-color: #218653;
+        background: color-mix(in srgb, #218653 12%, var(--surface));
+    }
+
+    .generated-password {
+        margin-top: 12px;
+        padding: 12px;
+        border-radius: 10px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        overflow-wrap: anywhere;
+    }
+
+    .generated-password-label {
+        color: var(--muted);
+        font-size: 11px;
+        margin-bottom: 7px;
+    }
+
+    .generated-password-value {
+        color: var(--text);
+        font-family: monospace;
+        font-size: 14px;
+        font-weight: 700;
+        user-select: all;
+    }
+
+    .copy-password {
+        margin-top: 10px;
+        width: 100%;
+        padding: 7px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .auth-submit {
+        min-height: 48px;
+        width: 100%;
+        border: 0;
+        border-radius: 11px;
+        background: #218653;
+        color: #fff;
+        font-weight: 750;
+        transition: background .2s, transform .2s;
+    }
+
+    .auth-submit:hover {
+        background: #176b41;
+        color: #fff;
+    }
+
+    .auth-submit:active {
+        transform: scale(.99);
+    }
+
+    .auth-footer {
+        padding-top: 21px;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    .auth-footer a {
+        color: var(--green);
+        font-weight: 750;
+        text-decoration: none;
+    }
+
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+
+    .auth-security {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        margin-top: 20px;
+        color: var(--muted);
+        font-size: 11px;
+    }
+
+    body.dark-mode .auth-logo {
+        background: #203e2b;
+    }
+
+    body.dark-mode .password-generator {
+        border-color: #426b50;
+    }
+
+    @media (max-width: 480px) {
+        .auth-page {
+            margin: 5px auto 30px;
+        }
+
+        .auth-header {
+            padding: 25px 20px 20px;
+        }
+
+        .auth-body {
+            padding: 24px 20px;
+        }
+    }
+</style>
+
+<div class="auth-page">
+
+    <div class="auth-card">
+
+        <div class="auth-header">
+            <div class="auth-logo">🍏</div>
+
+            <h1 class="auth-title">Создать аккаунт</h1>
+
+            <p class="auth-subtitle">
+                Присоединяйтесь к FreshManager.Pro
+                и управляйте сроками годности удобнее.
+            </p>
         </div>
-        <div class="card-body">
-                        <!-- Блок вывода ошибок бэкенда -->
+
+        <div class="auth-body">
+
+            <!-- Ошибки сервера -->
             {% if error_message %}
-                <div class="alert alert-danger small mb-3">{{ error_message }}</div>
+            <div class="alert alert-danger small" role="alert">
+                <strong>Не удалось зарегистрироваться.</strong>
+                {{ error_message }}
+            </div>
             {% endif %}
+
             {% if messages %}
                 {% for message in messages %}
-                    {% if message.tags == 'error' or message.tags == 'danger' %}
-                        <div class="alert alert-danger small mb-3">{{ message }}</div>
+                    {% if 'error' in message.tags or 'danger' in message.tags %}
+                    <div class="alert alert-danger small" role="alert">
+                        {{ message }}
+                    </div>
                     {% endif %}
                 {% endfor %}
             {% endif %}
 
-            <!-- Если бэкенд нашел ошибку, она ТОЧНО отобразится здесь -->
-            {% if error_message %}
-                <div class="alert alert-danger small mb-3">{{ error_message }}</div>
-            {% endif %}
-
-            <!-- Важно: метод строго POST -->
-            <form method="post" action="{% url 'register' %}">
+            <form method="post"
+                  action="{% url 'register' %}"
+                  id="registerForm">
                 {% csrf_token %}
-                
-                <!-- Поле Логина -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold small">Логин</label>
-                    <input type="text" name="username" class="form-control" required placeholder="Придумайте логин">
+
+                <div class="mb-4">
+                    <label for="username" class="auth-label">
+                        Логин
+                    </label>
+
+                    <input
+                        type="text"
+                        name="username"
+                        id="username"
+                        class="form-control auth-input"
+                        placeholder="Придумайте логин"
+                        autocomplete="username"
+                        minlength="3"
+                        required>
                 </div>
-                
-                <!-- Поле Пароля -->
+
                 <div class="mb-3">
-                    <label class="form-label fw-semibold small">Пароль</label>
-                    <div class="input-group">
-                        <input type="password" name="password" id="password" class="form-control" required placeholder="Введите или сгенерируйте">
-                        <button class="btn btn-outline-secondary" type="button" id="togglePassword">👁️</button>
+                    <label for="password" class="auth-label">
+                        Пароль
+                    </label>
+
+                    <div class="input-group auth-input-group">
+                        <input
+                            type="password"
+                            name="password"
+                            id="password"
+                            class="form-control auth-input"
+                            placeholder="Создайте надёжный пароль"
+                            autocomplete="new-password"
+                            minlength="8"
+                            required>
+
+                        <button
+                            class="btn password-toggle"
+                            type="button"
+                            id="togglePassword"
+                            aria-label="Показать пароль"
+                            aria-pressed="false">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
+                    <div class="form-text mt-2" style="color:var(--muted)">
+                        Рекомендуем использовать не менее 12 символов.
                     </div>
                 </div>
 
-                <!-- Кнопка генератора паролей (у нее тип type="button", чтобы она НЕ отправляла форму раньше времени) -->
                 <div class="mb-4">
-                    <button type="button" class="btn btn-sm btn-light border w-100 fw-semibold text-secondary" id="generatePasswordBtn">
-                         Сгенерировать надежный пароль
+                    <button
+                        type="button"
+                        class="password-generator"
+                        id="generatePasswordBtn">
+                        <i class="bi bi-shield-lock me-2"></i>
+                        Сгенерировать надёжный пароль
                     </button>
-                    <div id="generatedPasswordHelp" class="form-text text-success d-none mt-2 font-monospace bg-success-subtle p-2 rounded text-center border border-success-subtle"></div>
+
+                    <div
+                        id="generatedPasswordHelp"
+                        class="generated-password d-none"
+                        aria-live="polite">
+
+                        <div class="generated-password-label">
+                            Сгенерированный пароль — сохраните его
+                        </div>
+
+                        <div
+                            id="generatedPasswordValue"
+                            class="generated-password-value"></div>
+
+                        <button
+                            type="button"
+                            class="copy-password"
+                            id="copyPasswordBtn">
+                            <i class="bi bi-copy me-1"></i>
+                            Скопировать пароль
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Главная кнопка отправки формы (обязательно type="submit") -->
-                <button type="submit" class="btn btn-dark w-100 mb-3">Зарегистрироваться</button>
+                <button type="submit" class="btn auth-submit mb-4">
+                    Создать аккаунт
+                    <i class="bi bi-arrow-right ms-2"></i>
+                </button>
+
             </form>
-            
-            <div class="text-center small">
-                Уже есть аккаунт? <a href="{% url 'login' %}" class="text-dark fw-bold text-decoration-none">Войти</a>
+
+            <div class="auth-footer">
+                Уже есть аккаунт?
+                <a href="{% url 'login' %}">Войти</a>
             </div>
+
+            <div class="auth-security">
+                <i class="bi bi-shield-check"></i>
+                Защищённая регистрация
+            </div>
+
         </div>
     </div>
+
 </div>
 
 <script>
-// Безопасный скрипт генерации пароля без конфликтов синтаксиса
-document.getElementById('generatePasswordBtn').addEventListener('click', function() {
-    // Убрали экранирование символа $, теперь VS Code не путается в синтаксисе
-    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$^*()_+~-=";
-    const passwordLength = 14;
-    let password = "";
-    
-    const randomValues = new Uint32Array(passwordLength);
-    window.crypto.getRandomValues(randomValues);
-    for (let i = 0; i < passwordLength; i++) {
-        password += chars[randomValues[i] % chars.length];
-    }
-    
+(function () {
     const passwordInput = document.getElementById('password');
+    const toggleButton = document.getElementById('togglePassword');
+    const generateButton = document.getElementById('generatePasswordBtn');
     const helpBlock = document.getElementById('generatedPasswordHelp');
-    
-    passwordInput.value = password;
-    passwordInput.type = "text"; 
-    
-    helpBlock.innerText = "Ваш пароль: " + password;
-    helpBlock.classList.remove('d-none');
-});
+    const generatedValue = document.getElementById('generatedPasswordValue');
+    const copyButton = document.getElementById('copyPasswordBtn');
 
-// Скрипт переключения видимости пароля (глазик)
-document.getElementById('togglePassword').addEventListener('click', function() {
-    const passwordInput = document.getElementById('password');
-    if (passwordInput.type === 'password') {
+    if (!passwordInput || !toggleButton || !generateButton) return;
+
+    toggleButton.addEventListener('click', function () {
+        const isHidden = passwordInput.type === 'password';
+
+        passwordInput.type = isHidden ? 'text' : 'password';
+        toggleButton.setAttribute('aria-pressed', String(isHidden));
+        toggleButton.setAttribute(
+            'aria-label',
+            isHidden ? 'Скрыть пароль' : 'Показать пароль'
+        );
+
+        toggleButton.innerHTML = isHidden
+            ? '<i class="bi bi-eye-slash" aria-hidden="true"></i>'
+            : '<i class="bi bi-eye" aria-hidden="true"></i>';
+    });
+
+    generateButton.addEventListener('click', function () {
+        const chars =
+            'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*_-+';
+
+        const length = 16;
+        const randomValues = new Uint32Array(length);
+        const maxValid = Math.floor(4294967296 / chars.length) * chars.length;
+        let password = '';
+
+        // Криптографически безопасный выбор символов
+        // с отбрасыванием смещённых значений.
+        for (let i = 0; i < length; i++) {
+            let value;
+
+            do {
+                window.crypto.getRandomValues(randomValues.subarray(i, i + 1));
+                value = randomValues[i];
+            } while (value >= maxValid);
+
+            password += chars[value % chars.length];
+        }
+
+        passwordInput.value = password;
         passwordInput.type = 'text';
-        this.textContent = '🔒';
-    } else {
-        passwordInput.type = 'password';
-        this.textContent = '👁️';
-    }
-});
+
+        toggleButton.setAttribute('aria-pressed', 'true');
+        toggleButton.setAttribute('aria-label', 'Скрыть пароль');
+        toggleButton.innerHTML =
+            '<i class="bi bi-eye-slash" aria-hidden="true"></i>';
+
+        generatedValue.textContent = password;
+        helpBlock.classList.remove('d-none');
+
+        passwordInput.dispatchEvent(
+            new Event('input', { bubbles: true })
+        );
+
+        passwordInput.focus();
+    });
+
+    copyButton.addEventListener('click', async function () {
+        const password = passwordInput.value;
+
+        try {
+            await navigator.clipboard.writeText(password);
+            copyButton.innerHTML =
+                '<i class="bi bi-check2 me-1"></i> Скопировано';
+        } catch (error) {
+            // Резервный способ для браузеров без Clipboard API.
+            passwordInput.focus();
+            passwordInput.select();
+
+            const copied = document.execCommand('copy');
+
+            copyButton.textContent = copied
+                ? 'Скопировано'
+                : 'Выделите пароль и скопируйте вручную';
+        }
+    });
+})();
 </script>
+
 {% endblock %}

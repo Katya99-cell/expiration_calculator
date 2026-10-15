@@ -1,114 +1,455 @@
+html
 {% extends 'base.html' %}
+
 {% block content %}
-<div class="container mt-4" style="max-width: 550px;">
-    <div class="card shadow-sm border-0">
-        <!-- Скрыли ИИ: Заменили громкий "Интеллектуальный расчет..." на спокойный рабочий заголовок -->
-        <div class="card-header bg-dark text-white py-3">
-            <h5 class="card-title mb-0"><i class="bi bi-plus-circle me-2"></i>Добавление нового продукта</h5>
+
+<style>
+    .product-form-page {
+        max-width: 620px;
+        margin: 10px auto 45px;
+    }
+
+    .product-form-card {
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+    }
+
+    .product-form-header {
+        padding: 25px 28px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .product-form-icon {
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: #e5f6eb;
+        color: #218653;
+        font-size: 23px;
+    }
+
+    .product-form-title {
+        color: var(--text);
+        font-size: 21px;
+        font-weight: 800;
+        letter-spacing: -.5px;
+        margin: 0 0 5px;
+    }
+
+    .product-form-subtitle {
+        color: var(--muted);
+        font-size: 12px;
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    .product-form-body {
+        padding: 28px;
+    }
+
+    .product-label {
+        display: block;
+        color: var(--text);
+        font-size: 12px;
+        font-weight: 750;
+        margin-bottom: 9px;
+    }
+
+    .product-form-page input:not([type="checkbox"]):not([type="hidden"]),
+    .product-form-page select,
+    .product-form-page textarea {
+        width: 100%;
+        min-height: 46px;
+        padding: 10px 13px;
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-size: 14px;
+        transition: border-color .2s, box-shadow .2s;
+    }
+
+    .product-form-page input:focus,
+    .product-form-page select:focus,
+    .product-form-page textarea:focus {
+        outline: none;
+        border-color: #218653;
+        box-shadow: 0 0 0 3px rgba(33, 134, 83, .12);
+    }
+
+    .product-form-page input:disabled {
+        opacity: .55;
+        cursor: not-allowed;
+    }
+
+    .product-help {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.65;
+        margin-top: 8px;
+    }
+
+    .product-field-error {
+        color: #d64b4b;
+        font-size: 12px;
+        margin-top: 7px;
+    }
+
+    .opened-panel {
+        padding: 16px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 13px;
+        transition: border-color .2s;
+    }
+
+    .opened-panel.is-active {
+        border-color: #79bd91;
+    }
+
+    .opened-switch {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .opened-switch input[type="checkbox"] {
+        width: 19px;
+        height: 19px;
+        flex-shrink: 0;
+        accent-color: #218653;
+        cursor: pointer;
+    }
+
+    .opened-label {
+        color: var(--text);
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    .opened-description {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.6;
+        margin: 8px 0 0 31px;
+    }
+
+    .opened-date-panel {
+        padding: 17px;
+        margin-top: 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+    }
+
+    .product-submit {
+        width: 100%;
+        min-height: 48px;
+        background: #218653;
+        border: 1px solid #218653;
+        border-radius: 11px;
+        color: white;
+        font-size: 13px;
+        font-weight: 750;
+        transition: background .2s, transform .2s;
+    }
+
+    .product-submit:hover {
+        background: #176b41;
+        border-color: #176b41;
+        color: white;
+    }
+
+    .product-submit:active {
+        transform: scale(.99);
+    }
+
+    .product-back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 650;
+    }
+
+    .product-back-link:hover {
+        color: var(--green);
+    }
+
+    .product-form-page .alert {
+        border-radius: 11px;
+        font-size: 13px;
+    }
+
+    body.dark-mode .product-form-icon {
+        background: #203e2b;
+        color: #91e3ad;
+    }
+
+    body.dark-mode .opened-panel.is-active {
+        border-color: #426b50;
+    }
+
+    @media (max-width: 480px) {
+        .product-form-page {
+            margin-top: 0;
+        }
+
+        .product-form-header {
+            padding: 20px;
+        }
+
+        .product-form-body {
+            padding: 20px;
+        }
+
+        .product-form-title {
+            font-size: 19px;
+        }
+    }
+</style>
+
+<div class="product-form-page">
+
+    <div class="mb-3">
+        <a href="{% url 'products_list' %}" class="product-back-link">
+            <i class="bi bi-arrow-left"></i>
+            Вернуться к складу
+        </a>
+    </div>
+
+    <div class="product-form-card">
+
+        <div class="product-form-header">
+            <div class="product-form-icon">
+                <i class="bi bi-box-seam"></i>
+            </div>
+
+            <div>
+                <h1 class="product-form-title">
+                    Добавление продукта
+                </h1>
+
+                <p class="product-form-subtitle">
+                    Заполните информацию о продукте и условиях хранения.
+                </p>
+            </div>
         </div>
-        <div class="card-body p-4">
-            <form method="post" novalidate>
+
+        <div class="product-form-body">
+
+            <form method="post" id="addProductForm" novalidate>
                 {% csrf_token %}
 
                 {% if form.non_field_errors %}
-                    <div class="alert alert-danger shadow-sm">
+                    <div class="alert alert-danger mb-4" role="alert">
+                        <div class="fw-bold mb-1">
+                            Не удалось сохранить продукт
+                        </div>
+
                         {% for error in form.non_field_errors %}
-                            {{ error }}
+                            <div>{{ error }}</div>
                         {% endfor %}
                     </div>
                 {% endif %}
 
                 <!-- Наименование -->
-                <div class="mb-3">
-                    <label class="form-label text-muted small fw-bold text-uppercase">Наименование товара</label>
+                <div class="mb-4">
+                    <label for="{{ form.name.id_for_label }}"
+                           class="product-label">
+                        Наименование продукта
+                    </label>
+
                     {{ form.name }}
+
                     {% if form.name.errors %}
-                        <div class="text-danger small mt-1">{% for error in form.name.errors %}{{ error }}{% endfor %}</div>
+                        <div class="product-field-error">
+                            {% for error in form.name.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
                     {% endif %}
                 </div>
 
                 <!-- Категория -->
-                <div class="mb-3">
-                    <!-- Скрыли ИИ: Убрали "ГОСТ/ТУ", заменили на понятную человеку категорию -->
-                    <label class="form-label text-muted small fw-bold text-uppercase">Категория</label>
+                <div class="mb-4">
+                    <label for="{{ form.category.id_for_label }}"
+                           class="product-label">
+                        Категория
+                    </label>
+
                     {{ form.category }}
+
                     {% if form.category.errors %}
-                        <div class="text-danger small mt-1">{% for error in form.category.errors %}{{ error }}{% endfor %}</div>
+                        <div class="product-field-error">
+                            {% for error in form.category.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
                     {% endif %}
                 </div>
 
-                <!-- Условия хранения -->
-                <div class="mb-3">
-                    <!-- Скрыли ИИ: Убрали "хранения среды", сделали текст проще -->
-                    <label class="form-label text-muted small fw-bold text-uppercase">Режим хранения</label>
+                <!-- Хранение -->
+                <div class="mb-4">
+                    <label for="{{ form.storage_temperature.id_for_label }}"
+                           class="product-label">
+                        Условия хранения
+                    </label>
+
                     {{ form.storage_temperature }}
-                    <div class="form-text text-muted">При комнатной температуре срок хранения сокращается вдвое.</div>
+
+                    <div class="product-help">
+                        Укажите условия хранения, соответствующие
+                        маркировке продукта.
+                    </div>
+
                     {% if form.storage_temperature.errors %}
-                        <div class="text-danger small mt-1">{% for error in form.storage_temperature.errors %}{{ error }}{% endfor %}</div>
+                        <div class="product-field-error">
+                            {% for error in form.storage_temperature.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
                     {% endif %}
                 </div>
 
                 <!-- Дата производства -->
-                <div class="mb-3">
-                    <label class="form-label text-muted small fw-bold text-uppercase">Дата производства</label>
+                <div class="mb-4">
+                    <label for="{{ form.manufacture_date.id_for_label }}"
+                           class="product-label">
+                        Дата производства
+                    </label>
+
                     {{ form.manufacture_date }}
+
+                    <div class="product-help">
+                        Укажите дату изготовления с упаковки продукта.
+                    </div>
+
                     {% if form.manufacture_date.errors %}
-                        <div class="text-danger small mt-1">
-                            {% for error in form.manufacture_date.errors %}⚠️ {{ error }}{% endfor %}
+                        <div class="product-field-error">
+                            {% for error in form.manufacture_date.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
                         </div>
                     {% endif %}
                 </div>
 
-                <!-- Переключатель вскрытия упаковки -->
-                <!-- Изменили бэкграунд bg-light на более нейтральный, чтобы переключатель не перетягивал внимание -->
-                <div class="form-check form-switch mb-3 p-2 border border-light-subtle rounded ps-5">
-                    {{ form.is_opened }}
-                    <label class="form-check-label fw-semibold" for="id_is_opened">Герметичная упаковка вскрыта</label>
-                </div>
+                <!-- Вскрытие упаковки -->
+                <div class="opened-panel mb-4" id="openedPanel">
 
-                <!-- Дата вскрытия -->
-                <div class="mb-4" id="opened_date_group" style="display: none;">
-                    <!-- Скрыли ИИ: Убрали агрессивный желтый цвет text-warning -->
-                    <label class="form-label text-muted small fw-bold text-uppercase">Дата вскрытия</label>
-                    {{ form.opened_date }}
-                    {% if form.opened_date.errors %}
-                        <div class="text-danger small mt-1">
-                            {% for error in form.opened_date.errors %}⚠️ {{ error }}{% endfor %}
+                    <div class="opened-switch">
+                        {{ form.is_opened }}
+
+                        <label for="{{ form.is_opened.id_for_label }}"
+                               class="opened-label">
+                            Упаковка уже вскрыта
+                        </label>
+                    </div>
+
+                    <p class="opened-description">
+                        Включите этот параметр, если упаковка продукта
+                        уже открыта.
+                    </p>
+
+                    {% if form.is_opened.errors %}
+                        <div class="product-field-error">
+                            {% for error in form.is_opened.errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
                         </div>
                     {% endif %}
+
+                    <div id="openedDateGroup" class="opened-date-panel"
+                         hidden>
+
+                        <label for="{{ form.opened_date.id_for_label }}"
+                               class="product-label">
+                            Дата вскрытия упаковки
+                        </label>
+
+                        {{ form.opened_date }}
+
+                        <div class="product-help">
+                            Укажите фактическую дату вскрытия.
+                        </div>
+
+                        {% if form.opened_date.errors %}
+                            <div class="product-field-error">
+                                {% for error in form.opened_date.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
                 </div>
 
-                <!-- Скрыли ИИ: Кнопку "Рассчитать и зафиксировать" (клише ИИ) переименовали в действие -->
-                <button type="submit" class="btn btn-primary w-100 py-2.5 fw-bold text-uppercase tracking-wider">Сохранить продукт</button>
+                <button type="submit" class="btn product-submit">
+                    <i class="bi bi-check2-circle me-2"></i>
+                    Сохранить продукт
+                </button>
+
             </form>
+
         </div>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const isOpenedCheckbox = document.getElementById('id_is_opened');
-        const openedDateGroup = document.getElementById('opened_date_group');
-        const openedDateInput = document.getElementById('id_opened_date');
+document.addEventListener('DOMContentLoaded', function () {
+    const openedCheckbox = document.getElementById('id_is_opened');
+    const openedDateGroup = document.getElementById('openedDateGroup');
+    const openedDateInput = document.getElementById('id_opened_date');
+    const openedPanel = document.getElementById('openedPanel');
 
-        function toggleOpenedDateField() {
-            if (isOpenedCheckbox.checked) {
-                openedDateGroup.style.display = 'block';
-                openedDateInput.removeAttribute('disabled');
-                
-                if (!openedDateInput.value) {
-                    const today = new Date().toISOString().split('T')[0];
-                    openedDateInput.value = today;
-                }
-            } else {
-                openedDateGroup.style.display = 'none';
-                openedDateInput.setAttribute('disabled', 'disabled');
-                openedDateInput.value = '';
-            }
+    if (!openedCheckbox || !openedDateGroup || !openedDateInput) {
+        return;
+    }
+
+    function getLocalDate() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+
+        return year + '-' + month + '-' + day;
+    }
+
+    function toggleOpenedDate() {
+        const isOpened = openedCheckbox.checked;
+
+        openedDateGroup.hidden = !isOpened;
+        openedPanel.classList.toggle('is-active', isOpened);
+
+        openedDateInput.disabled = !isOpened;
+
+        if (isOpened && !openedDateInput.value) {
+            openedDateInput.value = getLocalDate();
         }
 
-        isOpenedCheckbox.addEventListener('change', toggleOpenedDateField);
-        toggleOpenedDateField();
-    });
+        if (!isOpened) {
+            openedDateInput.value = '';
+        }
+    }
+
+    openedCheckbox.addEventListener('change', toggleOpenedDate);
+
+    toggleOpenedDate();
+});
 </script>
+
 {% endblock %}
+

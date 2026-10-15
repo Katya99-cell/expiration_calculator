@@ -1,227 +1,834 @@
-
+html
 {% extends 'base.html' %}
+
 {% block content %}
-<div class="container mt-4">
 
-    <!-- Всплывающие уведомления -->
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-success alert-dismissible fade show shadow-sm mb-4" role="alert">
-                <i class="bi bi-check-circle-fill me-2"></i> {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<style>
+    .inventory-page {
+        --inv-green: #218653;
+        --inv-green-bg: #e8f6ed;
+        --inv-red: #dc5353;
+        --inv-orange: #d99520;
+    }
+
+    .page-heading {
+        font-size: clamp(25px, 3vw, 32px);
+        font-weight: 800;
+        letter-spacing: -1px;
+        color: var(--text);
+    }
+
+    .page-subtitle {
+        color: var(--muted);
+        font-size: 14px;
+    }
+
+    .inventory-page .btn-add {
+        background: var(--inv-green);
+        color: white;
+        border: 1px solid var(--inv-green);
+        padding: 11px 17px;
+        border-radius: 11px;
+        font-weight: 700;
+    }
+
+    .inventory-page .btn-add:hover {
+        background: #176b41;
+        color: white;
+    }
+
+    .stat-card {
+        position: relative;
+        height: 100%;
+        padding: 22px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 17px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        transition: transform .2s, box-shadow .2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(30, 60, 40, .08);
+    }
+
+    .stat-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .stat-label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+        text-transform: uppercase;
+        letter-spacing: .7px;
+    }
+
+    .stat-icon {
+        width: 43px;
+        height: 43px;
+        display: grid;
+        place-items: center;
+        border-radius: 13px;
+        font-size: 20px;
+    }
+
+    .stat-number {
+        font-size: 34px;
+        font-weight: 800;
+        letter-spacing: -1px;
+        color: var(--text);
+        line-height: 1.2;
+        margin-top: 19px;
+    }
+
+    .stat-caption {
+        margin-top: 7px;
+        font-size: 12px;
+        color: var(--muted);
+    }
+
+    .stat-total .stat-icon {
+        color: #3978d3;
+        background: #eaf1ff;
+    }
+
+    .stat-warning .stat-icon {
+        color: #b77a0c;
+        background: #fff3d7;
+    }
+
+    .stat-expired .stat-icon {
+        color: #d14343;
+        background: #ffebeb;
+    }
+
+    .inventory-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .search-box {
+        flex: 1;
+        min-width: 220px;
+        max-width: 430px;
+        position: relative;
+    }
+
+    .search-box .bi-search {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--muted);
+        z-index: 2;
+    }
+
+    .search-box .form-control {
+        padding-left: 41px;
+        min-height: 44px;
+        border-radius: 11px;
+    }
+
+    .inventory-page .form-select {
+        min-height: 44px;
+        width: auto;
+        min-width: 175px;
+    }
+
+    .inventory-table th {
+        white-space: nowrap;
+        padding: 16px 14px;
+    }
+
+    .inventory-table td {
+        padding: 17px 14px;
+    }
+
+    .product-name {
+        font-size: 14px;
+        font-weight: 750;
+        color: var(--text);
+    }
+
+    .product-subtitle {
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 4px;
+    }
+
+    .storage-tag,
+    .opened-tag,
+    .status-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 8px;
+        padding: 6px 9px;
+        font-size: 11px;
+        font-weight: 750;
+        white-space: nowrap;
+    }
+
+    .storage-cold {
+        color: #3276bc;
+        background: #eaf4ff;
+    }
+
+    .storage-room {
+        color: #a36a18;
+        background: #fff4df;
+    }
+
+    .opened-tag {
+        color: #777;
+        background: #edf0ed;
+        padding: 4px 7px;
+        font-size: 10px;
+    }
+
+    .status-fresh {
+        color: #218653;
+        background: #e7f6ec;
+    }
+
+    .status-warning {
+        color: #a66b08;
+        background: #fff1d1;
+    }
+
+    .status-expired {
+        color: #c53e3e;
+        background: #ffebeb;
+    }
+
+    .expiration-date {
+        font-weight: 700;
+        color: var(--text);
+        white-space: nowrap;
+    }
+
+    .freshness-wrap {
+        min-width: 115px;
+    }
+
+    .freshness-track {
+        height: 6px;
+        width: 100%;
+        overflow: hidden;
+        border-radius: 99px;
+        background: var(--border);
+        margin-bottom: 7px;
+    }
+
+    .freshness-fill {
+        height: 100%;
+        border-radius: inherit;
+        transition: width .3s;
+    }
+
+    .freshness-fill.fresh { background: #32a66a; }
+    .freshness-fill.warning { background: #e5a32a; }
+    .freshness-fill.expired { background: #e25454; }
+
+    .freshness-label {
+        font-size: 11px;
+        color: var(--muted);
+        font-weight: 700;
+    }
+
+    .table-footer {
+        padding: 15px 20px;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 12px;
+    }
+
+    .telegram-card {
+        padding: 24px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 17px;
+        box-shadow: var(--shadow);
+    }
+
+    .telegram-icon {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+        display: grid;
+        place-items: center;
+        border-radius: 14px;
+        background: #e7f4ff;
+        color: #168ac4;
+        font-size: 25px;
+    }
+
+    .telegram-title {
+        color: var(--text);
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    .telegram-description {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.8;
+    }
+
+    .telegram-card a {
+        color: var(--inv-green);
+        font-weight: 700;
+    }
+
+    .empty-state {
+        padding: 60px 20px;
+        text-align: center;
+    }
+
+    .empty-icon {
+        width: 76px;
+        height: 76px;
+        margin: 0 auto 20px;
+        display: grid;
+        place-items: center;
+        background: var(--bg);
+        color: var(--muted);
+        border-radius: 23px;
+        font-size: 32px;
+    }
+
+    .empty-state h5 {
+        font-weight: 800;
+        color: var(--text);
+    }
+
+    .empty-state p {
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    .inventory-page .table-hover tbody tr:hover > * {
+        background-color: color-mix(
+            in srgb, var(--green) 5%, var(--surface)
+        );
+    }
+
+    body.dark-mode .stat-total .stat-icon {
+        color: #9fc3ff;
+        background: #253750;
+    }
+
+    body.dark-mode .stat-warning .stat-icon {
+        color: #ffd37b;
+        background: #42351e;
+    }
+
+    body.dark-mode .stat-expired .stat-icon {
+        color: #ffaaaa;
+        background: #472626;
+    }
+
+    body.dark-mode .storage-cold {
+        color: #a5d2ff;
+        background: #233b51;
+    }
+
+    body.dark-mode .storage-room {
+        color: #ffdb9a;
+        background: #44361f;
+    }
+
+    body.dark-mode .opened-tag {
+        color: #c2cbc4;
+        background: #303a33;
+    }
+
+    body.dark-mode .status-fresh {
+        color: #91e3ad;
+        background: #203e2b;
+    }
+
+    body.dark-mode .status-warning {
+        color: #ffdb8c;
+        background: #43371f;
+    }
+
+    body.dark-mode .status-expired {
+        color: #ffaaaa;
+        background: #482828;
+    }
+
+    body.dark-mode .telegram-icon {
+        background: #20394b;
+        color: #83d1ff;
+    }
+
+    @media (max-width: 767px) {
+        .inventory-toolbar {
+            align-items: stretch;
+        }
+
+        .search-box {
+            min-width: 100%;
+            max-width: none;
+        }
+
+        .inventory-page .form-select {
+            flex: 1;
+            width: 100%;
+        }
+
+        .stat-card {
+            padding: 17px;
+        }
+
+        .stat-number {
+            font-size: 29px;
+        }
+
+        .telegram-card {
+            padding: 19px;
+        }
+    }
+</style>
+
+<div class="inventory-page">
+
+    <!-- Заголовок страницы -->
+    <div class="d-flex flex-wrap justify-content-between
+                align-items-center gap-3 mb-4">
+
+        <div>
+            <div class="page-subtitle mb-2">
+                Панель управления / Склад
             </div>
-        {% endfor %}
-    {% endif %}
 
-    <!-- Блок заголовка -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold mb-0"> Склад продуктов</h3>
-        <!-- Изменили btn-success на базовый btn-primary, чтобы уйти от ИИ-палитры -->
-        <a href="{% url 'add_product' %}" class="btn btn-primary fw-bold">
-            <i class="bi bi-plus-lg me-1"></i> Добавить продукт
+            <h1 class="page-heading mb-2">
+                Склад продуктов
+            </h1>
+
+            <p class="page-subtitle mb-0">
+                Контролируйте запасы и следите за сроками годности.
+            </p>
+        </div>
+
+        <a href="{% url 'add_product' %}" class="btn btn-add">
+            <i class="bi bi-plus-lg me-2"></i>
+            Добавить продукт
         </a>
-    </div> 
-    
-    <!-- Интерактивная поисковая строка -->
-    <div class="mb-4">
-        <div class="input-group shadow-sm">
-            <span class="input-group-text bg-body text-muted"><i class="bi bi-search"></i></span>
-            <input type="text" id="searchInput" class="form-control" placeholder="Поиск по названию продукта...">
-        </div>
     </div>
 
-    <!-- Аналитические карточки-счетчики -->
+    <!-- Статистика -->
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card bg-body shadow-sm border-0 border-start border-4 border-secondary">
-                <div class="card-body">
-                    <h6 class="text-muted text-uppercase small fw-bold">Всего товаров</h6>
-                    <h3 class="fw-bold mb-0 text-secondary">{{ total_count }}</h3>
+
+        <div class="col-12 col-sm-6 col-xl-4">
+            <div class="stat-card stat-total">
+                <div class="stat-top">
+                    <span class="stat-label">Всего продуктов</span>
+                    <span class="stat-icon">
+                        <i class="bi bi-box-seam"></i>
+                    </span>
+                </div>
+
+                <div class="stat-number">{{ total_count }}</div>
+
+                <div class="stat-caption">
+                    <i class="bi bi-archive me-1"></i>
+                    Продукты в вашем списке
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card bg-body shadow-sm border-0 border-start border-4 border-warning">
-                <div class="card-body">
-                    <h6 class="text-muted text-uppercase small fw-bold">Истекают (≤ 2 дн)</h6>
-                    <h3 class="fw-bold mb-0 text-warning">{{ warning_count }}</h3>
+
+        <div class="col-12 col-sm-6 col-xl-4">
+            <div class="stat-card stat-warning">
+                <div class="stat-top">
+                    <span class="stat-label">Скоро истекает</span>
+                    <span class="stat-icon">
+                        <i class="bi bi-clock-history"></i>
+                    </span>
+                </div>
+
+                <div class="stat-number">{{ warning_count }}</div>
+
+                <div class="stat-caption">
+                    <i class="bi bi-exclamation-circle me-1"></i>
+                    Осталось не более 2 дней
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card bg-body shadow-sm border-0 border-start border-4 border-danger">
-                <div class="card-body">
-                    <h6 class="text-muted text-uppercase small fw-bold">Просрочено</h6>
-                    <h3 class="fw-bold mb-0 text-danger">{{ expired_count }}</h3>
+
+        <div class="col-12 col-sm-6 col-xl-4">
+            <div class="stat-card stat-expired">
+                <div class="stat-top">
+                    <span class="stat-label">Просрочено</span>
+                    <span class="stat-icon">
+                        <i class="bi bi-calendar-x"></i>
+                    </span>
+                </div>
+
+                <div class="stat-number">{{ expired_count }}</div>
+
+                <div class="stat-caption">
+                    <i class="bi bi-shield-exclamation me-1"></i>
+                    Требуют вашего внимания
                 </div>
             </div>
+        </div>
+
+    </div>
+
+    <!-- Таблица склада -->
+    <div class="card mb-4">
+
+        <div class="inventory-toolbar">
+
+            <div>
+                <h5 class="fw-bold mb-1" style="color:var(--text)">
+                    Все продукты
+                </h5>
+                <div class="page-subtitle">
+                    Поиск и контроль сроков годности
+                </div>
+            </div>
+
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="search"
+                       id="searchInput"
+                       class="form-control"
+                       placeholder="Найти продукт..."
+                       aria-label="Поиск продуктов">
+            </div>
+
+            <select id="statusFilter"
+                    class="form-select"
+                    aria-label="Фильтр по статусу">
+                <option value="all">Все статусы</option>
+                <option value="fresh">Свежие</option>
+                <option value="warning">Скоро истекает</option>
+                <option value="expired">Просроченные</option>
+            </select>
+
+        </div>
+
+        {% if products %}
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle inventory-table mb-0"
+                   id="productsTable">
+
+                <thead>
+                    <tr>
+                        <th class="ps-4">Продукт</th>
+                        <th>Категория</th>
+                        <th>Хранение</th>
+                        <th>Срок годности</th>
+                        <th style="min-width:145px">Остаток срока</th>
+                        <th class="pe-4">Статус</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for product in products %}
+
+                    <tr class="product-row"
+                        data-name="{{ product.name|lower }}"
+                        data-category="{{ product.category.name|default:''|lower }}"
+                        data-status="{{ product.status }}">
+
+                        <td class="ps-4">
+                            <div class="product-name">
+                                {{ product.name }}
+                            </div>
+
+                            {% if product.is_opened %}
+                            <div class="mt-2">
+                                <span class="opened-tag">
+                                    <i class="bi bi-unlock"></i>
+                                    Вскрыт
+                                </span>
+                            </div>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <span class="page-subtitle">
+                                {{ product.category.name|default:"Без категории" }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if product.storage_temperature == 'REFRIGERATOR' %}
+                            <span class="storage-tag storage-cold">
+                                <i class="bi bi-thermometer-snow"></i>
+                                Холодильник
+                            </span>
+                            {% else %}
+                            <span class="storage-tag storage-room">
+                                <i class="bi bi-house"></i>
+                                Комнатная
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div class="expiration-date">
+                                {{ product.expiration_date|date:"d.m.Y" }}
+                            </div>
+
+                            <div class="product-subtitle">
+                                {% if product.days_left < 0 %}
+                                    Просрочен на {{ product.days_left|stringformat:"d"|slice:"1:" }} дн.
+                                {% elif product.days_left == 0 %}
+                                    Последний день
+                                {% else %}
+                                    Осталось {{ product.days_left }} дн.
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <td>
+                            <div class="freshness-wrap">
+                                
+                                {% with pct=product.freshness_percentage|default:0 %}
+                                    <div class="freshness-wrap">
+                                        <div class="freshness-track">
+                                            <div
+                                            class="freshness-fill {% if product.status == 'expired' %}expired{% elif product.status == 'warning' %}warning{% else %}fresh{% endif %}"
+                                            data-pct="{{ pct }}">
+                                            </div>
+                                         </div>
+
+                                        <span class="freshness-label">{{ pct }}%</span>
+                                    </div>
+                               {% endwith %}
+
+                                <span class="freshness-label">
+                                    {{ product.freshness_percentage|default:0 }}%
+                                </span>
+                            </div>
+                        </td>
+
+                        <td class="pe-4">
+                            {% if product.status == 'expired' %}
+                            <span class="status-tag status-expired">
+                                <i class="bi bi-x-circle"></i>
+                                Просрочен
+                            </span>
+                            {% elif product.status == 'warning' %}
+                            <span class="status-tag status-warning">
+                                <i class="bi bi-exclamation-circle"></i>
+                                Истекает
+                            </span>
+                            {% else %}
+                            <span class="status-tag status-fresh">
+                                <i class="bi bi-check-circle"></i>
+                                Свежий
+                            </span>
+                            {% endif %}
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+
+                    <tr id="noSearchResults" style="display:none">
+                        <td colspan="6" class="text-center py-5">
+                            <i class="bi bi-search d-block mb-2"
+                               style="font-size:25px;color:var(--muted)"></i>
+                            <strong style="color:var(--text)">
+                                Ничего не найдено
+                            </strong>
+                            <div class="page-subtitle mt-1">
+                                Измените поисковый запрос или фильтр.
+                            </div>
+                        </td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-footer d-flex justify-content-between
+                    flex-wrap gap-2">
+            <span id="resultsCount">
+                Всего продуктов: {{ total_count }}
+            </span>
+
+            <span>
+                <i class="bi bi-arrow-repeat me-1"></i>
+                Данные вашего склада
+            </span>
+        </div>
+
+        {% else %}
+
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="bi bi-basket3"></i>
+            </div>
+
+            <h5>Ваш склад пока пуст</h5>
+
+            <p class="mb-4">
+                Добавьте первый продукт, чтобы начать
+                следить за сроками годности.
+            </p>
+
+            <a href="{% url 'add_product' %}" class="btn btn-add">
+                <i class="bi bi-plus-lg me-2"></i>
+                Добавить первый продукт
+            </a>
+        </div>
+
+        {% endif %}
+
+    </div>
+
+    <!-- Telegram -->
+    <div class="telegram-card mb-4">
+        <div class="row g-4 align-items-center">
+
+            <div class="col-lg-7">
+                <div class="d-flex gap-3 align-items-start">
+
+                    <div class="telegram-icon">
+                        <i class="bi bi-telegram"></i>
+                    </div>
+
+                    <div>
+                        <h5 class="telegram-title mb-2">
+                            Telegram-уведомления
+                        </h5>
+
+                        <p class="telegram-description mb-2">
+                            Получайте сообщения о приближающихся сроках
+                            годности ваших продуктов.
+                        </p>
+
+                        <p class="telegram-description mb-0">
+                            Откройте бота
+                            <a href="https://t.me/expiration_calculator_bot"
+                               target="_blank"
+                               rel="noopener noreferrer">
+                                @expiration_calculator_bot
+                            </a>,
+                            нажмите <strong>/start</strong> и следуйте
+                            инструкциям бота, чтобы узнать свой Chat ID.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <form method="POST" action="" class="d-flex flex-column gap-2">
+                    {% csrf_token %}
+
+                    <label for="telegramChatId"
+                           class="small fw-bold"
+                           style="color:var(--text)">
+                        Ваш Telegram Chat ID
+                    </label>
+
+                    <input type="text"
+                           id="telegramChatId"
+                           name="telegram_chat_id"
+                           class="form-control"
+                           placeholder="Например, 123456789"
+                           value="{{ profile.telegram_chat_id|default:'' }}"
+                           inputmode="numeric"
+                           pattern="[0-9]+"
+                           title="Введите числовой Telegram Chat ID">
+
+                    <button type="submit"
+                            name="save_profile"
+                            value="1"
+                            class="btn btn-add w-100">
+                        <i class="bi bi-link-45deg me-2"></i>
+                        Сохранить привязку
+                    </button>
+                </form>
+            </div>
+
         </div>
     </div>
 
-    <!-- Основная таблица -->
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-0">
-            {% if products %}
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0" id="productsTable">
-                        <thead class="table-light text-uppercase fs-7 tracking-wider">
-                            <tr>
-                                <th class="ps-4 text-muted small fw-bold">Наименование</th>
-                                <th class="text-muted small fw-bold">Категория</th>
-                                <th class="text-muted small fw-bold">Режим хранения</th>
-                                <th class="text-muted small fw-bold">Истекает</th>
-                                <!-- Скрыли ИИ: Заменили "Ресурс свежести" на привычный "Срок годности" -->
-                                <th class="text-muted small fw-bold" style="width: 200px;">Остаток срока</th>
-                                <th class="pe-4 text-muted small fw-bold text-end">Статус</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for product in products %}
-                            <tr class="product-row" data-name="{{ product.name|lower }}">
-                                <td class="fw-bold ps-4 text-dark-emphasis">
-                                    {{ product.name }}
-                                    {% if product.is_opened %}
-                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle ms-1">вскрыт</span>
-                                    {% endif %}
-                                </td>
-                                <td><span class="text-muted">{{ product.category.name|default:"—" }}</span></td>
-                                <td>
-                                    <!-- Скрыли ИИ: Убрали эмодзи домиков/снежинок, сделали аккуратные текстовые теги -->
-                                    {% if product.storage_temperature == 'REFRIGERATOR' %}
-                                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">Холодильник</span>
-                                    {% else %}
-                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Комнатная</span>
-                                    {% endif %}
-                                </td>
-                                <td class="fw-semibold">
-                                    {{ product.expiration_date|date:"d.m.Y" }} 
-                                    <small class="text-muted d-block font-monospace">({{ product.days_left }} дн.)</small>
-                                </td>
-                                <td>
-                                    <div class="progress-bar 
-                                     {% if product.status == 'expired' %}bg-danger
-                                     {% elif product.status == 'warning' %}bg-warning
-                                     {% else %}bg-success{% endif %}" 
-                                     role="progressbar" 
-                                     data-percentage="{{ product.freshness_percentage|default:0 }}"
-                                     style="--percentage: {{ product.freshness_percentage|default:0 }}%; width: var(--percentage);">
-                                    </div>
-                                        <span class="small fw-bold font-monospace {% if product.status == 'expired' %}text-danger{% elif product.status == 'warning' %}text-warning{% else %}text-muted{% endif %}">
-                                            {{ product.freshness_percentage }}%
-                                        </span>
-                                    </div>
-                                </td>
-                                <td class="pe-4 text-end">
-                                    <!-- Скрыли ИИ: Убрали крестики/галочки, заменили на аккуратные текстовые статусы вместо огромных кнопок -->
-                                    {% if product.status == 'expired' %}
-                                        <span class="text-danger small fw-bold">Истек</span>
-                                    {% elif product.status == 'warning' %}
-                                        <span class="text-warning small fw-bold">Истекает</span>
-                                    {% else %}
-                                        <span class="text-success small fw-bold">Свежий</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <!-- Заглушка, если база пуста -->
-                <div class="text-center py-5">
-                    <div class="text-muted mb-3"><i class="bi bi-basket3 text-secondary" style="font-size: 2.5rem;"></i></div>
-                    <h5 class="fw-bold">Список продуктов пуст</h5>
-                    <p class="text-muted small">Добавьте первый товар, чтобы начать контроль сроков годности.</p>
-                    <a href="{% url 'add_product' %}" class="btn btn-primary btn-sm px-4">Добавить продукт</a>
-                </div>
-            {% endif %}
-        </div>
-    </div>
 </div>
 
- <!-- ИНТЕГРАЦИЯ С ТЕЛЕГРАМ-БОТОМ -->
-    <div class="card bg-body shadow-sm border-0 mb-4 p-3">
-        <div class="row align-items-center">
-            <div class="col-lg-7">
-                <h5 class="fw-bold mb-1"><i class="bi bi-telegram text-info"></i> Проактивные Telegram-уведомления</h5>
-                <p class="text-muted small mb-lg-0">
-                    Система автоматически пришлет вам отчет в мессенджер, когда у продуктов будет истекать срок годности. 
-                    Чтобы подключить услугу, перейдите в нашего бота 
-                    <a href="https://t.me/expiration_calculator_bot" target="_blank" class="fw-bold text-decoration-none text-success">@expiration_calculator_bot</a>, 
-                    нажмите <b>/start</b>, скопируйте полученный числовой ID и вставьте в поле справа.
-                </p>
-            </div>
-              <div class="col-lg-5">
-            <form method="POST" action="" class="input-group mt-2 mt-lg-0">
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('searchInput');
+    const statusFilter = document.getElementById('statusFilter');
+    const table = document.getElementById('productsTable');
+    const noResults = document.getElementById('noSearchResults');
+    const resultsCount = document.getElementById('resultsCount');
 
-        {% csrf_token %}
+    if (!table) return;
 
-        <input
-            type="text"
-            name="telegram_chat_id"
-            class="form-control"
-            placeholder="Вставьте Telegram Chat ID"
-            value="{{ profile.telegram_chat_id|default:'' }}"
-        >
+    const rows = Array.from(table.querySelectorAll('.product-row'));
 
-        <button
-            class="btn btn-outline-dark fw-bold text-uppercase"
-            type="submit"
-            name="save_profile"
-            style="font-size: 12px;"
-        >
-            Привязать
-           </button>
-         </form>
-      </div>
+    function filterProducts() {
+        const query = searchInput.value.trim().toLocaleLowerCase('ru');
+        const selectedStatus = statusFilter.value;
+        let visibleCount = 0;
 
-       <!-- Скрипты мгновенного поиска и динамической установки ширины прогресс-баров -->
-     <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // 1. Динамическая установка ширины шкал
-        const progressBars = document.querySelectorAll('.progress-bar');
-        progressBars.forEach(bar => {
-            const pct = bar.getAttribute('data-percentage');
-            if (pct) {
-                bar.style.width = pct + '%';
-            }
+        rows.forEach(function (row) {
+            const name = (row.dataset.name || '').toLocaleLowerCase('ru');
+            const category = (row.dataset.category || '').toLocaleLowerCase('ru');
+            const status = row.dataset.status || '';
+
+            const matchesSearch =
+                name.includes(query) || category.includes(query);
+
+            const matchesStatus =
+                selectedStatus === 'all' || status === selectedStatus;
+
+            const visible = matchesSearch && matchesStatus;
+
+            row.style.display = visible ? '' : 'none';
+
+            if (visible) visibleCount++;
         });
 
-        // 2. Живой поиск на клиенте без перезагрузки
-        const searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-            searchInput.addEventListener('input', function(e) {
-                const query = e.target.value.toLowerCase().trim();
-                const rows = document.querySelectorAll('.product-row');
-                let hasVisibleRows = false;
-                
-                rows.forEach(row => {
-                    const name = row.getAttribute('data-name');
-                    if (name && name.includes(query)) {
-                        row.style.display = '';
-                        hasVisibleRows = true;
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-
-                // Вывод сообщения, если ничего не найдено
-                let noResultsRow = document.getElementById('noSearchTemplateResults');
-                if (!hasVisibleRows && query !== '') {
-                    if (!noResultsRow) {
-                        const tbody = document.querySelector('#productsTable tbody');
-                        if (tbody) {
-                            noResultsRow = document.createElement('tr');
-                            noResultsRow.id = 'noSearchTemplateResults';
-                            noResultsRow.innerHTML = '<td colspan="6" class="text-center text-muted py-4">🔍 Продукты не найдены</td>';
-                            tbody.appendChild(noResultsRow);
-                        }
-                    }
-                } else if (noResultsRow) {
-                    noResultsRow.remove();
-                }
-            });
+        if (noResults) {
+            noResults.style.display = visibleCount === 0 ? '' : 'none';
         }
+
+        if (resultsCount) {
+            resultsCount.textContent =
+                'Показано продуктов: ' + visibleCount + ' из ' + rows.length;
+        }
+    }
+
+    searchInput.addEventListener('input', filterProducts);
+    statusFilter.addEventListener('change', filterProducts);
+
+    filterProducts();
+});
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.freshness-fill[data-pct]').forEach(function (bar) {
+        const value = Number(bar.dataset.pct);
+        const percentage = Number.isFinite(value)
+            ? Math.max(0, Math.min(100, value))
+            : 0;
+
+        bar.style.width = percentage + '%';
     });
+});
 </script>
+
 {% endblock %}
